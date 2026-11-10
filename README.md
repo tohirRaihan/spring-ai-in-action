@@ -5,9 +5,9 @@ has its own Gradle build and wrapper and can be built and run separately.
 
 ## Projects
 
-| Project | Description |
-| --- | --- |
-| [board-game-buddy](board-game-buddy/) | Answers questions about board game rules using Spring AI and Ollama. |
+| Project                                     | Description                                                                          |
+|---------------------------------------------|--------------------------------------------------------------------------------------|
+| [board-game-buddy](board-game-buddy/)       | Answers questions about board game rules using Spring AI and Ollama.                 |
 | [vector-store-loader](vector-store-loader/) | Spring AI starter project with Qdrant vector store and document reader dependencies. |
 
 ## Requirements
