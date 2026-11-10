@@ -1,0 +1,21 @@
+* Burger Bomb: Blow up another player's Burger by sending their ingredients
+to the Graveyard.
+* Burger Force Field: Your Burger is now protected from all Battle Cards
+* Burgerpocalypse: Obliterate all players' ingredients, including your own,
+and toss them in the Graveyard.
+* Destroy!: Destroy any Battle Card of yours or another player's and toss
+it in the Graveyard.
+* Gonna Eat That?: Steal another player's ingredient and add it to your
+Burger.
+* Grave Digger: Dig through the Graveyard for any needed ingredient and add
+it to your Burger.
+* I Got Nothin': Toss your hand in the Graveyard and draw 5 new cards
+* More Meat!: Make another player's Burger a double-decker by adding an
+extra Meat to their ingredients list.
+* Pickle Plague: Rain vengeance down upon another player by adding Pickles
+to their ingredients list.
+* Picky Eater: Throw another player's Lettuce, Tomato, or Onion in the
+Graveyard.
+* The Old Switcheroo: Trade hands with another player.
+* Yours Looks Good!: Trade your Burger and all of your ingredients with
+another player, including added Battle Cards.
