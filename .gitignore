@@ -62,3 +62,4 @@ Desktop.ini
 *.log
 logs/
 qdrant_storage/
+vector-store-loader/dropoff/
