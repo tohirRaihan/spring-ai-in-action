@@ -37,9 +37,10 @@ public class Config {
   Function<Flux<byte[]>, Flux<Document>> documentReader() {
     return resourceFlux ->
         resourceFlux
+            // The file supplier emits on a nonblocking scheduler; move processing off it.
+            .publishOn(Schedulers.boundedElastic())
             .map(fileBytes ->
-                new TikaDocumentReader(new ByteArrayResource(fileBytes)).get().getFirst())
-            .subscribeOn(Schedulers.boundedElastic());
+                new TikaDocumentReader(new ByteArrayResource(fileBytes)).get().getFirst());
   }
 
   @Bean
@@ -53,8 +54,8 @@ public class Config {
             .build();
     return documentFlux ->
         documentFlux
-            .map(incoming -> splitter.apply(List.of(incoming)))
-            .subscribeOn(Schedulers.boundedElastic());
+            .publishOn(Schedulers.boundedElastic())
+            .map(incoming -> splitter.apply(List.of(incoming)));
   }
 
   @Bean
@@ -64,44 +65,47 @@ public class Config {
     var chatClient = chatClientBuilder.build();
 
     return documentListFlux ->
-        documentListFlux.map(documents -> {
-          if (!documents.isEmpty()) {
-            var firstDocument = documents.getFirst();
+        documentListFlux
+            .publishOn(Schedulers.boundedElastic())
+            .map(documents -> {
+              if (!documents.isEmpty()) {
+                var firstDocument = documents.getFirst();
 
-            var gameTitle =
-                chatClient
-                    .prompt()
-                    .user(userSpec ->
-                        userSpec
-                            .text(nameOfTheGameTemplateResource)
-                            .param("document", firstDocument.getText()))
-                    .call()
-                    .entity(GameTitle.class);
+                var gameTitle =
+                    chatClient
+                        .prompt()
+                        .user(userSpec ->
+                            userSpec
+                                .text(nameOfTheGameTemplateResource)
+                                .param("document", firstDocument.getText()))
+                        .call()
+                        .entity(GameTitle.class);
 
-            if (Objects.requireNonNull(gameTitle).title().equals("UNKNOWN")) {
-              LOGGER.warn(
-                  "Unable to determine the name of a game; " + "not adding to vector store.");
-              documents = Collections.emptyList();
+                if (Objects.requireNonNull(gameTitle).title().equals("UNKNOWN")) {
+                  LOGGER.warn(
+                      "Unable to determine the name of a game; " + "not adding to vector store.");
+                  documents = Collections.emptyList();
+                  return documents;
+                }
+
+                LOGGER.info("Determined game title to be {}", gameTitle.title());
+                documents =
+                    documents.stream()
+                        .peek(document -> {
+                          document.getMetadata().put("gameTitle", gameTitle.getNormalizedTitle());
+                        })
+                        .toList();
+              }
+
               return documents;
-            }
-
-            LOGGER.info("Determined game title to be {}", gameTitle.title());
-            documents =
-                documents.stream()
-                    .peek(document -> {
-                      document.getMetadata().put("gameTitle", gameTitle.getNormalizedTitle());
-                    })
-                    .toList();
-          }
-
-          return documents;
-        });
+            });
   }
 
   @Bean
   Consumer<Flux<List<Document>>> vectorStoreConsumer(VectorStore vectorStore) {
     return documentFlux ->
         documentFlux
+            .publishOn(Schedulers.boundedElastic())
             .doOnNext(documents -> {
               if (!documents.isEmpty()) {
                 var docCount = documents.size();
@@ -112,7 +116,11 @@ public class Config {
                 LOGGER.info("{} documents have been written to vector store.", docCount);
               }
             })
-            .subscribe();
+            .subscribe(
+                ignored -> {},
+                error -> LOGGER.error(
+                    "Document ingestion stopped after an error; restart the loader to resume.",
+                    error));
   }
 
   @Bean
